@@ -1,20 +1,89 @@
 package com.example.ipclib.core
 
-import android.annotation.SuppressLint
 import android.app.Application
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
+import com.example.ipclib.ClassId
+import com.example.ipclib.CocosBinderAIDLInterface
+import com.example.ipclib.ServiceManager
+import com.example.ipclib.bean.RequestBean
+import com.example.ipclib.cache.CacheCenter
+import java.lang.reflect.Method
 
 object BinderIPC {
     private lateinit var mCtx: Application
+
+    var mCocosBinderAIDL : CocosBinderAIDLInterface? = null
+
     fun init(ctx: Application) {
         this.mCtx = ctx
     }
 
 
     //1. 服务注册的方法
-
     fun <T> register(clazz: Class<T>) {
         //注册交给CacheCenter
+        CacheCenter.register(clazz)
+
 
     }
+
+    fun open(ctx: Application) {
+        open(ctx, null, ServiceManager::class.java)
+    }
+
+    fun open(ctx: Application, packageName: String?, service: Class<ServiceManager>) {
+        init(ctx)
+        val intent: Intent
+        if (packageName.isNullOrEmpty()) {
+            //app内启动
+            intent = Intent(ctx, ServiceManager::class.java)
+        } else {
+            //跨app启动
+            intent = Intent()
+            val component = ComponentName(packageName, service.name)
+            intent.component = component
+            //如果是跨app启动，需要通过action来进行启动
+            intent.action = service.name
+
+        }
+        ctx.bindService(intent, CocosServiceConnection(), Context.BIND_AUTO_CREATE)
+    }
+
+    class CocosServiceConnection() : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, service: IBinder?) {
+            mCocosBinderAIDL = CocosBinderAIDLInterface.Stub.asInterface(service)
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+        }
+
+    }
+
+
+    /**
+     * 提供一个对外提供真正的服务实现的方法
+     */
+
+    fun <T> getInstance(clazz: Class<T>, vararg params: Array<Any>?) : T? {
+
+        sendRequest(clazz, clazz.methods[1],params)
+
+
+
+        return null
+    }
+
+    private fun <T> sendRequest(clazz: Class<T>, method: Method?, params: Array<out Any?>) {
+        val className = clazz.getAnnotation(ClassId::class.java)?.value
+        var methodName = if(method == null) "getInstance" else method.name
+
+//        val requestBean = RequestBean(className,methodName,params)
+
+    }
+
+
 }

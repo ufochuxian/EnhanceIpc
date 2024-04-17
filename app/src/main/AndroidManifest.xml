@@ -23,6 +23,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".SecondActivity" android:process=":game"></activity>
+
+        <service android:name="com.example.ipclib.ServiceManager"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.ipclib.ServiceManager"></action>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
