@@ -1,9 +1,9 @@
 package com.example.ipclib.cache
 
+import java.lang.StringBuilder
 import java.lang.reflect.Method
 import java.util.Objects
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 
 /**
  *
@@ -25,9 +25,8 @@ object CacheCenter {
     private var mObjectMap = ConcurrentHashMap<String, Objects>()
 
     fun <T> register(clazz: Class<T>) {
-
         registerClass(clazz)
-
+        registerMethod(clazz)
     }
 
     private fun <T> registerClass(clazz: Class<T>) {
@@ -41,9 +40,26 @@ object CacheCenter {
         val className = clazz.name
         clazz.methods.forEach { method ->
             var methodMap = allMethodMap[className]
-            if(methodMap.isNullOrEmpty()) ConcurrentHashMap<String,Method>() else methodMap[className] = method
-        }
+            if(methodMap.isNullOrEmpty()) {
+                methodMap = ConcurrentHashMap()
+            }
+            val key = getMethodParameters(method)
+            methodMap[key] = method
 
+        }
+    }
+
+    //使用方法的全名称，生成一个唯一key,这里主要是防止java的方法的重载
+    private fun getMethodParameters(method: Method): String {
+        val builder = StringBuilder()
+        builder.append(method.name)
+        method.parameterTypes.forEach { clazz ->
+            builder.apply {
+                append("-")
+                append(clazz.name)
+            }
+        }
+        return builder.toString()
     }
 
 
