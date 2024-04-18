@@ -9,7 +9,7 @@ package com.example.ipclib.bean
  * @desc:
 
  */
-class RequestBean(val name:String,val methodName:String,val parameters : Array<RequestParameter>) {
+class RequestBean(val name:String?,val methodName:String?,val parameters : ArrayList<RequestParameter>?) {
 
 
 

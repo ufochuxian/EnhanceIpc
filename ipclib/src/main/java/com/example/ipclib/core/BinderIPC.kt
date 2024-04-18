@@ -10,13 +10,17 @@ import com.example.ipclib.ClassId
 import com.example.ipclib.CocosBinderAIDLInterface
 import com.example.ipclib.ServiceManager
 import com.example.ipclib.bean.RequestBean
+import com.example.ipclib.bean.RequestParameter
 import com.example.ipclib.cache.CacheCenter
+import com.google.gson.Gson
 import java.lang.reflect.Method
 
 object BinderIPC {
     private lateinit var mCtx: Application
 
-    var mCocosBinderAIDL : CocosBinderAIDLInterface? = null
+    private val gson = Gson()
+
+    var mCocosBinderAIDL: CocosBinderAIDLInterface? = null
 
     fun init(ctx: Application) {
         this.mCtx = ctx
@@ -35,7 +39,7 @@ object BinderIPC {
         open(ctx, null, ServiceManager::class.java)
     }
 
-    fun open(ctx: Application, packageName: String?, service: Class<ServiceManager>) {
+    private fun open(ctx: Application, packageName: String?, service: Class<ServiceManager>) {
         init(ctx)
         val intent: Intent
         if (packageName.isNullOrEmpty()) {
@@ -68,20 +72,31 @@ object BinderIPC {
      * 提供一个对外提供真正的服务实现的方法
      */
 
-    fun <T> getInstance(clazz: Class<T>, vararg params: Array<Any>?) : T? {
+    fun <T> getInstance(clazz: Class<T>, vararg params: Any): T? {
 
-        sendRequest(clazz, clazz.methods[1],params)
-
+        sendRequest(clazz, clazz.methods[0], ServiceManager.ServiceType.SERVICE_FIND.value, *params)
 
 
         return null
     }
 
-    private fun <T> sendRequest(clazz: Class<T>, method: Method?, params: Array<out Any?>) {
+    private fun <T> sendRequest(clazz: Class<T>, method: Method?, type: Int,vararg params: Any) {
         val className = clazz.getAnnotation(ClassId::class.java)?.value
-        var methodName = if(method == null) "getInstance" else method.name
+        var methodName = if (method == null) "getInstance" else method.name
 
-//        val requestBean = RequestBean(className,methodName,params)
+        val requestParameters: ArrayList<RequestParameter> = arrayListOf()
+        params.forEachIndexed { _,param ->
+            val parameterClassName = param.javaClass.name
+            val parameterValue = gson.toJson(param)
+            requestParameters.add(RequestParameter(parameterClassName, parameterValue))
+        }
+        //构造的“请求参数”，发送出去
+        val requestBean = RequestBean(className, methodName, requestParameters)
+
+        val requestStr = gson.toJson(requestBean)
+
+        //通过binder发送请求过去（其实做的就是一个将对象进行序列化的操作，然后通过进程间通信发送出去）
+        mCocosBinderAIDL?.request(requestStr)
 
     }
 

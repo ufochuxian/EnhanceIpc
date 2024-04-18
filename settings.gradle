@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "EnhanceIpc"
 include ':app'
 include ':ipclib'
+include ':common_lib'

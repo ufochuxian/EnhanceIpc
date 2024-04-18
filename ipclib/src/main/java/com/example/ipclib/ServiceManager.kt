@@ -15,9 +15,9 @@ import android.os.IBinder
  */
 class ServiceManager : Service() {
 
-    enum class ServiceType {
-        SERVICE_FIND,//服务发现
-        SERVICE_INVOKE //服务调用
+    enum class ServiceType(val value:Int) {
+        SERVICE_FIND(0),//服务发现
+        SERVICE_INVOKE(1) //服务调用
     }
 
     override fun onBind(p0: Intent?): IBinder? {

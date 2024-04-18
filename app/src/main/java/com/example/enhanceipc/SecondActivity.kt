@@ -2,6 +2,8 @@ package com.example.enhanceipc
 
 import android.app.Activity
 import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
 import com.example.ipclib.core.BinderIPC
 
 /**
@@ -24,7 +26,9 @@ class SecondActivity : Activity() {
 
         BinderIPC.open(application)
 
-        mSingleTonService = BinderIPC.getInstance(ISInglton::class.java, arrayOf("david",10))
+        findViewById<TextView>(R.id.getInstanceBtn).setOnClickListener {
+             mSingleTonService = BinderIPC.getInstance(ISInglton::class.java, "david",10)
+        }
 
 
 
