@@ -1,5 +1,6 @@
 package com.example.ipclib.cache
 
+import com.example.ipclib.bean.RequestBean
 import java.lang.StringBuilder
 import java.lang.reflect.Method
 import java.util.Objects
@@ -18,7 +19,7 @@ object CacheCenter {
     //2. map("类名字",对应的类的所有的方法)
 //    private var mMethodMap = ConcurrentHashMap<String, Method>()
 
-    private var allMethodMap = ConcurrentHashMap<String,ConcurrentHashMap<String,Method>>()
+    private var mAllMethodMap = ConcurrentHashMap<String,ConcurrentHashMap<String,Method>>()
 
     //3. 缓存能够提供服务的对象，方便后续使用
 
@@ -39,7 +40,7 @@ object CacheCenter {
     private fun <T> registerMethod(clazz: Class<T>) {
         val className = clazz.name
         clazz.methods.forEach { method ->
-            var methodMap = allMethodMap[className]
+            var methodMap = mAllMethodMap[className]
             if(methodMap.isNullOrEmpty()) {
                 methodMap = ConcurrentHashMap()
             }
@@ -60,6 +61,23 @@ object CacheCenter {
             }
         }
         return builder.toString()
+    }
+
+    private fun getMethodParameters(requestBean: RequestBean) :String {
+        val builder = StringBuilder()
+        builder.append(requestBean.methodName)
+        requestBean.parameters?.forEach {
+            builder.apply {
+                append("-")
+                append(it.type)
+            }
+        }
+        return builder.toString()
+    }
+
+    fun getMethod(requestBean: RequestBean): Method? {
+        requestBean.parameters
+        return mAllMethodMap[requestBean.name]?.get(getMethodParameters(requestBean))
     }
 
 

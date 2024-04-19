@@ -65,6 +65,10 @@ object BinderIPC {
         override fun onServiceDisconnected(p0: ComponentName?) {
         }
 
+        override fun onNullBinding(name: ComponentName?) {
+            super.onNullBinding(name)
+        }
+
     }
 
 
@@ -74,24 +78,25 @@ object BinderIPC {
 
     fun <T> getInstance(clazz: Class<T>, vararg params: Any): T? {
 
-        sendRequest(clazz, clazz.methods[0], ServiceManager.ServiceType.SERVICE_FIND.value, *params)
+        sendRequest(clazz, clazz.methods[0], ServiceManager.ServiceType.SERVICE_FIND, *params)
 
 
         return null
     }
 
-    private fun <T> sendRequest(clazz: Class<T>, method: Method?, type: Int,vararg params: Any) {
+    private fun <T> sendRequest(clazz: Class<T>, method: Method?, type: ServiceManager.ServiceType,vararg params: Any) {
         val className = clazz.getAnnotation(ClassId::class.java)?.value
         var methodName = if (method == null) "getInstance" else method.name
 
         val requestParameters: ArrayList<RequestParameter> = arrayListOf()
         params.forEachIndexed { _,param ->
             val parameterClassName = param.javaClass.name
+            //这一步
             val parameterValue = gson.toJson(param)
             requestParameters.add(RequestParameter(parameterClassName, parameterValue))
         }
         //构造的“请求参数”，发送出去
-        val requestBean = RequestBean(className, methodName, requestParameters)
+        val requestBean = RequestBean(className, methodName,type, requestParameters)
 
         val requestStr = gson.toJson(requestBean)
 
