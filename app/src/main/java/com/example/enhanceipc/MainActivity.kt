@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         //2. 服务注册
         BinderIPC.register(Singlton::class.java)
 
-        Singlton.user = User("YaoMing",20)
+//        Singlton.user = User("YaoMing",20)
 
         //3. 服务发现 (1. 通知主进程实例化对象 2. 将对象返回到调用进程（aidl）)
 

@@ -9,4 +9,4 @@ package com.example.ipclib.bean
  * @desc:
 
  */
-class RequestParameter(val name:String,val type:String)
+class RequestParameter(val parameterClassName:String, val paramValue:String)

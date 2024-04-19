@@ -1,7 +1,7 @@
 package com.example.ipclib.cache
 
 import com.example.ipclib.bean.RequestBean
-import java.lang.StringBuilder
+import timber.log.Timber
 import java.lang.reflect.Method
 import java.util.Objects
 import java.util.concurrent.ConcurrentHashMap
@@ -13,13 +13,15 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object CacheCenter {
 
+    private const val TAG = "CacheCenter"
+
     //1. map("类名字",对应的类)
     private var mClassMap = ConcurrentHashMap<String, Class<*>>()
 
     //2. map("类名字",对应的类的所有的方法)
 //    private var mMethodMap = ConcurrentHashMap<String, Method>()
 
-    private var mAllMethodMap = ConcurrentHashMap<String,ConcurrentHashMap<String,Method>>()
+    private var mAllMethodMap = ConcurrentHashMap<String, ConcurrentHashMap<String, Method>>()
 
     //3. 缓存能够提供服务的对象，方便后续使用
 
@@ -41,12 +43,12 @@ object CacheCenter {
         val className = clazz.name
         clazz.methods.forEach { method ->
             var methodMap = mAllMethodMap[className]
-            if(methodMap.isNullOrEmpty()) {
+            if (methodMap.isNullOrEmpty()) {
                 methodMap = ConcurrentHashMap()
+                mAllMethodMap[className] = methodMap
             }
             val key = getMethodParameters(method)
             methodMap[key] = method
-
         }
     }
 
@@ -63,21 +65,30 @@ object CacheCenter {
         return builder.toString()
     }
 
-    private fun getMethodParameters(requestBean: RequestBean) :String {
+    private fun getMethodParameters(requestBean: RequestBean): String {
         val builder = StringBuilder()
         builder.append(requestBean.methodName)
         requestBean.parameters?.forEach {
             builder.apply {
                 append("-")
-                append(it.type)
+                append(it.parameterClassName)
             }
         }
         return builder.toString()
     }
 
     fun getMethod(requestBean: RequestBean): Method? {
-        requestBean.parameters
         return mAllMethodMap[requestBean.name]?.get(getMethodParameters(requestBean))
+    }
+
+    fun getClassType(parameterClassName: String): Class<*>? {
+        try {
+            return Class.forName(parameterClassName)
+        } catch (e: ClassNotFoundException) {
+            Timber.tag(TAG)
+                .w("[CacheCenter],根据参数类型名称，获取参数的类型class出错了，parameterClassName:%s", parameterClassName)
+        }
+        return null
     }
 
 
