@@ -46,9 +46,15 @@ class ServiceManager : Service() {
                         //根据方法名称，从缓存表中获取服务
                         val method = CacheCenter.getMethod(requestBean)
 
+
+                        //获取当前类的对象
+                        val clazz = Class.forName(requestBean.name)
+                        val instance = clazz.getDeclaredConstructor().newInstance()
+
+
                         //  根据RequestBean,获取请求方法，所需要的参数
                         val parameters = getParametersByRequestBean(requestBean)
-                        method?.invoke(null,parameters)
+                        method?.invoke(instance,parameters[0],parameters[1])
                     }
                     ServiceType.SERVICE_INVOKE -> {
 
