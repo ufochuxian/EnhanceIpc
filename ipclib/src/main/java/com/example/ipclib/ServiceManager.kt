@@ -3,10 +3,10 @@ package com.example.ipclib
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import com.example.ipclib.bean.RequestBean
 import com.example.ipclib.cache.CacheCenter
 import com.google.gson.Gson
+import timber.log.Timber
 
 /**
 
@@ -21,8 +21,7 @@ class ServiceManager : Service() {
 
     class MyBinder : CocosBinderAIDLInterface.Stub() {
 
-        private val TAG = "ServiceManager"
-        val gson = Gson()
+        private val gson = Gson()
 
         override fun basicTypes(
             anInt: Int,
@@ -38,7 +37,7 @@ class ServiceManager : Service() {
         override fun request(str: String?): String {
             str?.let {
                 val requestBean = gson.fromJson(it, RequestBean::class.java)
-                Log.d(TAG, "requestBean,name:${requestBean.name}")
+                Timber.d("requestBean,name:${requestBean.name}")
 
                 //获取客户端请求的服务类型（1. 服务发现 2. 服务调用）
                 when (requestBean.type) {
@@ -46,11 +45,9 @@ class ServiceManager : Service() {
                         //根据方法名称，从缓存表中获取服务
                         val method = CacheCenter.getMethod(requestBean)
 
-
                         //获取当前类的对象
-                        val clazz = Class.forName(requestBean.name)
-                        val instance = clazz.getDeclaredConstructor().newInstance()
-
+                        val clazz = requestBean.name?.let { className -> Class.forName(className) }
+                        val instance = clazz?.getDeclaredConstructor()?.newInstance()
 
                         //  根据RequestBean,获取请求方法，所需要的参数
                         val parameters = getParametersByRequestBean(requestBean)
@@ -85,7 +82,7 @@ class ServiceManager : Service() {
         SERVICE_INVOKE(1) //服务调用
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
+    override fun onBind(p0: Intent?): IBinder {
         return MyBinder()
     }
 }
