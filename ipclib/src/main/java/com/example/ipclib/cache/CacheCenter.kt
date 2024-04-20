@@ -1,6 +1,7 @@
 package com.example.ipclib.cache
 
 import com.example.ipclib.bean.RequestBean
+import com.google.gson.Gson
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.util.Objects
@@ -14,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap
 object CacheCenter {
 
     private const val TAG = "CacheCenter"
+
+    private val gson = Gson()
 
     //1. map("类名字",对应的类)
     private var mClassMap = ConcurrentHashMap<String, Class<*>>()
@@ -63,6 +66,21 @@ object CacheCenter {
             }
         }
         return builder.toString()
+    }
+
+    /**
+     * 根据参数的class类型和参数value，生成“参数数组”
+     */
+     fun getParametersByRequestBean(requestBean: RequestBean): ArrayList<*> {
+        val params = arrayListOf<Any>()
+        requestBean.parameters?.forEach {
+            val clazz = CacheCenter.getClassType(it.parameterClassName)
+            //这里为啥需要用gson进行再次序列化，主要是为了应对“对象嵌套对象”的那种场景和数据模型，所以需要进行反序列化
+            val param = gson.fromJson(it.paramValue, clazz)
+            params.add(param)
+        }
+
+        return params
     }
 
     private fun getMethodParameters(requestBean: RequestBean): String {
